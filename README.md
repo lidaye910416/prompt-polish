@@ -61,6 +61,30 @@ python3 scripts/check.py --selftest     # 16 条断言
 python3 scripts/check.py < candidate.md # exit 0 才允许 pbcopy
 ```
 
+## 验收测试：产物真的进剪贴板了吗
+
+这是插件的核心输出契约——`/prompt-polish:*` 跑完后，剪贴板里必须是**润色产物**，不是回复正文，也不是原始输入。
+
+```bash
+# 1. 确认剪贴板通路通（应看到 SENTINEL-12345）
+printf 'SENTINEL-12345' | pbcopy && pbpaste
+
+# 2. /reload-plugins
+
+# 3. Cmd+C 复制一段提示词，输入框敲：
+#    /prompt-polish:goal
+
+# 4. 等回复出来，什么都别碰，另开终端跑：
+cd ~/prompt-polish && python3 scripts/verify-clipboard.py goal
+
+# flow 模式换成 flow 参数，并额外检查反引号族字符
+python3 scripts/verify-clipboard.py flow
+```
+
+`PASS` = 剪贴板里是带幂等标记、六段齐全、≤4000 字符、有数字轮次上限和 `exit=` 证据 token 的合法产物。
+
+失败时会逐条列出原因，并打印剪贴板前 200 字——最常见的失败是「没找到幂等标记」，说明 skill 跑完了但 `pbcopy` 那一步没执行。
+
 ## 许可
 
 MIT
