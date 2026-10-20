@@ -424,7 +424,7 @@ output:                     # → 脚本 return 的形状
 | 项 | 状态 |
 |---|---|
 | `/prompt-polish:goal` 的实际调用名 | **推断**自本会话 skill 列表实证的命名空间规则（插件 skill 带 `plugin:skill` 前缀）。装完必须用 `/plugin` 核一次 |
-| `${CLAUDE_PLUGIN_ROOT}` 在 SKILL.md 正文里能否替换 | 未验证。设计已规避（不跨 skill 共享文件） |
+| `${CLAUDE_PLUGIN_ROOT}` 在 SKILL.md 正文里能否替换 | **已证实可替换**（2026-10-20 查官方文档）：正文 markdown 与 `allowed-tools` 里的 Bash 规则都会展开，可让 skill 免批准跑自带脚本。原「不跨 skill 共享文件」的规避已不需要 |
 | `disable-model-invocation: true` 在本机是否生效 | 文档里有，未在本机任何 SKILL.md 上实证过。v1 不用它 |
 | 两个 SKILL.md 各自独立演化导致的漂移 | 已知代价。缓解：共享块在两个文件里都标注 `# 共享块 v1 — 改这里必须同步改另一个`，涨到 50 行时抽文件 |
 | `pbcopy` 覆盖用户剪贴板里原有的无关内容 | 已接受（D6）。若输入来自 `pbpaste` 则无损失；若来自 `@文件` 则会覆盖 |

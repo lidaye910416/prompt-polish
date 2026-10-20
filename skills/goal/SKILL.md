@@ -2,7 +2,7 @@
 name: goal
 description: 把选定的提示词改写成一条能直接粘到 Claude Code /goal 后面的完成条件串。Use when the user wants to turn a rough prompt into a goal-style, self-verifying condition that Claude works toward autonomously until it is provably done — keywords 润色, 改写成 /goal, 目标提示词, 完成条件, goal prompt, polish for /goal. Not for turning a prompt into a multi-agent workflow spec (that is the flow skill).
 argument-hint: "[原文 | @文件]"
-allowed-tools: Bash(pbpaste:*), Bash(pbcopy:*), Bash(python3:*), Bash(printf:*), Bash(cat:*), AskUserQuestion
+allowed-tools: Bash(pbpaste), Bash(pbcopy), Bash(cat *), Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check.py *), AskUserQuestion
 ---
 
 # 模式1：润色成 /goal 完成条件
@@ -117,10 +117,10 @@ allowed-tools: Bash(pbpaste:*), Bash(pbcopy:*), Bash(python3:*), Bash(printf:*),
 ## 7. 校验并复制（顺序不可颠倒）
 
 ```bash
-CHECK=~/.claude/skills/prompt-polish/scripts/check.py
-[ -f "$CHECK" ] || CHECK=~/prompt-polish/scripts/check.py
-printf '%s' "$POLISHED" | python3 "$CHECK" && printf '%s' "$POLISHED" | pbcopy
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check.py <<< "$POLISHED" && pbcopy <<< "$POLISHED"
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` 在 SKILL.md 正文和 `allowed-tools` 里都会展开（官方文档明载），所以这条不需要用户批准，而且不依赖插件装在哪。
 
 `check.py` 从 stdin 读产物，规范化口径跟 `/goal` 一致（CRLF→LF、逐行 rstrip、tab 展开为 8 列、首尾 trim），然后检查：六个标签各一次、`完成=` 一次、验收每条带 `→` 标注、范围非空、上限是数字、必含 `贴`/`exit=`/`禁止`、反引号外无禁用词、无占位符。
 

@@ -2,7 +2,7 @@
 name: flow
 description: 把选定的提示词改写成一份能交给 Workflow 编排器、扇出多个 agent 的任务规格（workflow-spec/v1），含线性 stages、每 stage 的扇出形态、每项的真 JSON Schema、汇总与验证规则。Use when the user wants a rough prompt turned into a multi-agent orchestration spec — keywords 润色, 改写成 workflow, 编排, 多 agent, 扇出, fan-out, orchestrable spec, polish for workflow. Not for /goal completion conditions (that is the goal skill).
 argument-hint: "[原文 | @文件]"
-allowed-tools: Bash(pbpaste:*), Bash(pbcopy:*), Bash(printf:*), Bash(cat:*), Bash(grep:*), AskUserQuestion
+allowed-tools: Bash(pbpaste), Bash(pbcopy), Bash(cat *), Bash(grep *), AskUserQuestion
 ---
 
 # 模式2：润色成 Workflow 编排规格

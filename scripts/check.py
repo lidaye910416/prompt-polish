@@ -162,6 +162,48 @@ GOOD = """<!-- polished-by: prompt-polish mode=goal v1 -->
 上限：12 轮。遇阻不提问，按影响最小的假设继续并在首行写明 `假设：…`。"""
 
 
+def pad_to(text, n):
+    """Pad with Chinese filler to exactly n canonicalized characters."""
+    out = canonicalize(text)
+    return out + "。" * max(0, n - len(out) - 1) + "。"
+
+
+ACC_LINE = [ln for ln in GOOD.split("\n") if ln.startswith("验收（")][0]
+
+# 中文边界用例。每一行的期望值都来自实际探测，不是推断。
+#
+# 两个已知缺陷（本轮禁止改动判断逻辑，故只记录、不写成断言——把 bug 固化成
+# 断言等于让它变成契约）：
+#   1. 段标签括注超过 80 字符会被漏检（section_count 的窗口太窄）。真实润色
+#      输出如果把「每条命令在哪跑、怎么贴」写得很长，很容易踩到。
+#   2. 「完成＝」全角等号不被识别为完成行，只认半角 =。中文用户很可能打全角。
+CHINESE_EDGE_CASES = {
+    # — 超过 4000 字符 —
+    "长输入刚好 4000": (pad_to(GOOD, 4000), 0),
+    "长输入 4001 超一字符": (pad_to(GOOD, 4001), 2),
+    # — 段落标签用全角括号 / 全角冒号 —
+    "验收段用全角括号加全角冒号": (GOOD.replace(ACC_LINE, "验收（把完整原始输出贴进对话）："), 0),
+    "验收段用纯全角冒号": (GOOD.replace(ACC_LINE, "验收："), 0),
+    "验收括注 60 字符仍在 80 窗口内": (GOOD.replace(ACC_LINE, "验收（" + "长" * 60 + "）："), 0),
+    "验收段缩进两空格": (GOOD.replace("\n" + ACC_LINE, "\n  " + ACC_LINE), 1),
+    "完成行用全角等号": (GOOD.replace("完成=", "完成＝"), 1),
+    # — tab 缩进混在正文中间 —
+    "正文中间夹 tab 破坏段标签": (GOOD.replace("目标：tests", "目\t标：\ttests"), 1),
+    "行尾 tab 被 rstrip 吃掉": (GOOD + "\t\n", 0),
+    "段标签行首 tab 被 strip 吃掉": ("\t" + GOOD, 0),
+    "反引号命令内含 tab": (GOOD.replace("`pytest -q tests/auth.py`", "`py\ttest`"), 0),
+    # — 其它中文输入环境 —
+    "CRLF 换行": (GOOD.replace("\n", "\r\n"), 0),
+    "正文含全角空格 U+3000": (GOOD.replace("目标：", "目标：　"), 0),
+    "串首两个空行": ("\n\n" + GOOD, 0),
+    "串尾空行加 tab": (GOOD + "\n\n\t\n", 0),
+    "UTF-8 BOM 开头": ("﻿" + GOOD, 0),
+    "直角引号换成中文弯引号": (GOOD.replace("逐项写「已做/未做+证据」", "逐项写“已做/未做”"), 0),
+    "中文禁用词出现在反引号外": (GOOD.replace("补 6 条用例", "优化 6 处"), 1),
+    "中文禁用词出现在反引号内": (GOOD.replace("`pytest -q tests/auth.py`", "`优化 pytest`"), 0),
+}
+
+
 def selftest():
     """Smallest check that fails if check() breaks. assert-based, no framework."""
     assert check(canonicalize(GOOD)) is None, "canonical sample must pass"
@@ -187,10 +229,19 @@ def selftest():
         assert got is not None, f"{name}: expected failure {want}, passed"
         assert got[0] == want, f"{name}: expected exit {want}, got {got[0]} ({got[1]})"
 
+    for name, (raw, want) in CHINESE_EDGE_CASES.items():
+        got = check(canonicalize(raw))
+        if want == 0:
+            assert got is None, f"{name}: expected pass, got exit {got[0]} ({got[1]})"
+        else:
+            assert got is not None, f"{name}: expected exit {want}, passed"
+            assert got[0] == want, f"{name}: expected exit {want}, got {got[0]} ({got[1]})"
+
     # tab expansion must match /goal: a tab counts as 8 columns, not 1 character.
     # Padded with non-space so the final .strip() can't eat the expansion.
     assert len(canonicalize("a\tb")) == 9, "a tab must expand to 8 columns, not 1 char"
-    print(f"selftest: {len(bad_cases) + 2} assertions passed")
+    total = len(bad_cases) * 2 + len(CHINESE_EDGE_CASES) + 2
+    print(f"selftest: {total} assertions passed")
 
 
 def main():
