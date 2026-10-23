@@ -11,7 +11,25 @@
 
 ## 安装
 
-仓库根就是插件根。已经软链到位了：
+从插件市场安装（仓库自建市场，`marketplace.json` 就在仓库根的 `.claude-plugin/` 下）：
+
+```bash
+# 添加市场。owner/repo 简写只认 github.com，其他 git 主机必须给完整 URL
+claude plugin marketplace add https://gitee.com/jasonlee/prompt-polish.git
+
+# 安装插件
+claude plugin install prompt-polish@jasonlee-plugins
+```
+
+会话内一条命令（Claude Code 2.1.275+）：
+
+```
+/plugin install prompt-polish --marketplace https://gitee.com/jasonlee/prompt-polish.git
+```
+
+> **平台**：依赖 macOS 的 `pbcopy` / `pbpaste` 读写剪贴板，目前只在 macOS 上可用。
+
+本地开发时仓库根就是插件根。已经软链到位了：
 
 ```bash
 ln -s ~/prompt-polish ~/.claude/skills/prompt-polish

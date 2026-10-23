@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jasonlee-plugins",
+  "description": "jasonlee 维护的 Claude Code 插件集",
+  "owner": {
+    "name": "jasonlee"
+  },
+  "plugins": [
+    {
+      "name": "prompt-polish",
+      "description": "把选定的提示词改写成两种可直接执行的产物：goal 模式输出能粘到 Claude Code /goal 后面的完成条件串，flow 模式输出能交给 Workflow 编排器扇出多 agent 的任务规格",
+      "author": {
+        "name": "jasonlee"
+      },
+      "license": "MIT",
+      "version": "0.1.0",
+      "source": "./"
+    }
+  ]
+}

@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# 本地会话笔记，不随公开仓库分发
+docs/ai-memory/
